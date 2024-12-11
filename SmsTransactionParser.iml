@@ -13,5 +13,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="kotlinx-serialization-json-jvm-1.7.3" level="project" />
     <orderEntry type="library" name="kotlinx-serialization-core-jvm-1.7.3" level="project" />
+    <orderEntry type="library" name="kotlinx-serialization-json-1.7.3" level="project" />
   </component>
 </module>
