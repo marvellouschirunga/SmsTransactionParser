@@ -1,48 +1,56 @@
 import java.io.File
 
 // Enum for Account Types
+// Represents different types of accounts associated with transactions
 enum class AccountType {
     CARD, WALLET, ACCOUNT, UNKNOWN
 }
 
 // Data Classes to hold parsed transaction details
+// Holds account-related information
 data class AccountInfo(
-    val type: AccountType,
-    val number: String?,
-    val name: String? = null
+    val type: AccountType, // Type of account (CARD, WALLET, etc.)
+    val number: String?,   // Account number, can be null
+    val name: String? = null // Optional account name
 )
 
+// Holds balance-related information
 data class Balance(
-    val available: String?,
-    val outstanding: String? = null
+    val available: String?,        // Available balance
+    val outstanding: String? = null // Outstanding balance, optional
 )
 
+// Holds transaction-specific details
 data class Transaction(
-    val type: String?,
-    val amount: String?,
-    val referenceNo: String?,
-    val merchant: String?,
-    val currency: String?,
-    val date: String?,
-    val category: String? // New field for category
+    val type: String?,      // Transaction type (DEBIT/CREDIT)
+    val amount: String?,    // Transaction amount
+    val referenceNo: String?, // Reference number for the transaction
+    val merchant: String?,  // Merchant or description of the transaction
+    val currency: String?,  // Currency type (e.g., USD)
+    val date: String?,      // Transaction date
+    val category: String?   // Category of the transaction (e.g., Groceries, Fuel)
 )
 
+// Combines account, balance, and transaction details
 data class TransactionInfo(
-    val account: AccountInfo,
-    val balance: Balance?,
-    val transaction: Transaction
+    val account: AccountInfo, // Account information
+    val balance: Balance?,    // Balance information
+    val transaction: Transaction // Transaction details
 )
 
-// Class to parse SMS text
+// Class to parse SMS text into structured transaction information (LOGIC)
 class SmsParser {
+    // Parses a transaction SMS message into a TransactionInfo object
     fun getTransactionInfo(message: String): TransactionInfo {
-        val accountRegex = "ac (\\d{3}\\*\\*\\d{3})".toRegex()
-        val amountRegex = "(USD|EUR|GBP|ZAR|JPY|CAD|ZWG|ZWL|\$|\u20AC)\\s?([\\d,]+\\.\\d{2})".toRegex()
-        val referenceRegex = "REF:(\\S+)".toRegex()
-        val merchantRegex = "REF:\\S+\\s+(.*?)\\s+on \\d{2}-\\w{3}-\\d{2}".toRegex()
-        val dateRegex = "on (\\d{2}-\\w{3}-\\d{2})".toRegex()
-        val balanceRegex = "Available Balance is (USD|EUR|GBP|ZAR|JPY|CAD|ZWG|ZWL) ([\\d,]+\\.\\d{2})".toRegex()
+        // Regular expressions to extract transaction details
+        val accountRegex = "ac (\\d{3}\\*\\*\\d{3})".toRegex() // Extracts masked account number
+        val amountRegex = "(USD|EUR|GBP|ZAR|JPY|CAD|ZWG|ZWL|\\$|\\u20AC)\\s?([\\d,]+\\.\\d{2})".toRegex() // Extracts amount and currency
+        val referenceRegex = "REF:(\\S+)".toRegex() // Extracts reference number
+        val merchantRegex = "REF:\\S+\\s+(.*?)\\s+on \\d{2}-\\w{3}-\\d{2}".toRegex() // Extracts merchant name
+        val dateRegex = "on (\\d{2}-\\w{3}-\\d{2})".toRegex() // Extracts transaction date
+        val balanceRegex = "Available Balance is (USD|EUR|GBP|ZAR|JPY|CAD|ZWG|ZWL) ([\\d,]+\\.\\d{2})".toRegex() // Extracts available balance
 
+        // Extract values from the SMS message using the regular expressions
         val accountNumber = accountRegex.find(message)?.groups?.get(1)?.value
         val amountMatch = amountRegex.find(message)
         val currency = amountMatch?.groups?.get(1)?.value
@@ -54,14 +62,17 @@ class SmsParser {
         val balanceCurrency = balanceMatch?.groups?.get(1)?.value
         val availableBalance = balanceMatch?.groups?.get(2)?.value?.replace(",", "")
 
+        // Determine if the transaction is a debit or credit
         val transactionType = when {
             message.contains("Debited", ignoreCase = true) -> "DEBIT"
             message.contains("Credited", ignoreCase = true) -> "CREDIT"
             else -> null
         }
 
+        // Categorize the transaction based on the merchant
         val category = categorizeTransaction(merchant)
 
+        // Create objects for account, balance, and transaction details
         val accountInfo = AccountInfo(
             type = if (accountNumber != null) AccountType.ACCOUNT else AccountType.UNKNOWN,
             number = accountNumber
@@ -79,8 +90,10 @@ class SmsParser {
             category = category
         )
 
+        // Check for large debit transactions and alert the user
         checkTransactionAlerts(transaction)
 
+        // Return the structured transaction information
         return TransactionInfo(
             account = accountInfo,
             balance = balance,
@@ -88,6 +101,7 @@ class SmsParser {
         )
     }
 
+    // Categorizes the transaction based on merchant name
     private fun categorizeTransaction(merchant: String?): String {
         return when {
             merchant == null -> "Unknown"
@@ -101,6 +115,7 @@ class SmsParser {
         }
     }
 
+    // Checks for large debit transactions and prints an alert
     private fun checkTransactionAlerts(transaction: Transaction) {
         if (transaction.type == "DEBIT" && (transaction.amount?.replace(",", "")?.toDoubleOrNull() ?: 0.0) > 1000) {
             println("ALERT: Large debit transaction detected: ${transaction.amount} from ${transaction.merchant}")
@@ -108,6 +123,7 @@ class SmsParser {
     }
 }
 
+// Saves a list of transactions to a CSV file
 fun saveTransactionsToFile(transactions: List<TransactionInfo>) {
     val file = File("transactions.csv")
     if (!file.exists()) {
@@ -120,6 +136,7 @@ fun saveTransactionsToFile(transactions: List<TransactionInfo>) {
     println("Transaction added to transactions.csv")
 }
 
+// Generates a transaction report and saves it to a text file
 fun exportReport(transactions: List<TransactionInfo>) {
     val reportFile = File("transaction_report.txt")
     reportFile.writeText("Transaction Report\n\n")
@@ -134,6 +151,7 @@ fun exportReport(transactions: List<TransactionInfo>) {
     println("Transaction report created at transaction_report.txt")
 }
 
+// Main function to run the SMS parser
 fun main() {
     val parser = SmsParser()
     val transactions = mutableListOf<TransactionInfo>()
@@ -150,6 +168,7 @@ fun main() {
 
             transactions.add(transactionInfo)
 
+            // Print parsed transaction details
             println("\nParsed Transaction Information:")
             println("Account Info: Type = ${transactionInfo.account.type}, Number = ${transactionInfo.account.number}")
             println("Available Balance: ${transactionInfo.balance?.available}")

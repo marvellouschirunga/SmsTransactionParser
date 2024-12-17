@@ -4,7 +4,7 @@ The purpose of this software is to parse transaction details from SMS messages, 
 
 The primary goal of this software is to automate the extraction and organization of transaction data from SMS messages, which can be useful for personal finance management or integration with other financial systems.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/2Y-buCt9n6M)
 
 # Development Environment
 
@@ -12,13 +12,9 @@ I used IntelliJ IDEA, a powerful and user-friendly integrated development enviro
 
 # Useful Websites
 
-
-
-
-
 - [Kotlin Official Documentation](http://url.link.goes.here)
 - [IntelliJ IDEA Documentation](http://url.link.goes.here)
-- [Stack Overflow](http://url.link.goes.here)
+- [Rebular](https://rubular.com/r/ethxISYh3xzlOr)
 
 # Future Work
 
